@@ -39,10 +39,17 @@ func displayQuote(Serial: Int) {
 }
 
 initializationQuoteList()
+
 print("📖")
+
+print("---\n","Pinned")
 displayQuote(Serial: 0)
 displayQuote(Serial: 1)
-print("---\n","Ramdom | size=10 color=#006284")
+
+print("---\n","Ramdom")
 let amountOfQuoteList = quoteList.count
 let ramdomSerial = Int.random(in: 0..<amountOfQuoteList)
 displayQuote(Serial: ramdomSerial)
+
+print("---\n","open resources| bash='open /Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt' terminal=true")
+print("---\n","reload | refresh=true ")
