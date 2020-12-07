@@ -33,9 +33,16 @@ func processQuoteToSeveralLine(quoteSentence: String) -> String {
     return result
 }
 
+func displayQuote(Serial: Int) {
+    print("---")
+    print(processQuoteToSeveralLine(quoteSentence: quoteList[Serial]))
+}
+
 initializationQuoteList()
 print("📖")
-print("---")
-print(processQuoteToSeveralLine(quoteSentence: quoteList[1]))
-print("---")
-print(processQuoteToSeveralLine(quoteSentence: quoteList[0]))
+displayQuote(Serial: 0)
+displayQuote(Serial: 1)
+print("---\n","Ramdom | size=10 color=#006284")
+let amountOfQuoteList = quoteList.count
+let ramdomSerial = Int.random(in: 0..<amountOfQuoteList)
+displayQuote(Serial: ramdomSerial)
