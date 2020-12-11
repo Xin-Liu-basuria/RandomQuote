@@ -13,6 +13,12 @@ let quoteColor = "#C46243"
 let fontSize = 13
 let bitbarAPI = "| color=\(quoteColor) length=\(maxCharDefault) size=\(fontSize)\n"
 let bitbarAlternateAPI = "| color=\(quoteColor) length=\(maxCharDefault) size=\(fontSize) alternate=true\n"
+let locationResourcesFile = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt"
+
+if URL(string: locationResourcesFile) == nil {
+    exit(1)
+}
+var locationResourcesFileURL = URL(string: locationResourcesFile)
 
 struct quoteContent {
     static var quoteContentList: [quoteContent] = []
@@ -21,10 +27,60 @@ struct quoteContent {
         let randomSerial = Int.random(in: 0..<amountOfList)
         return quoteContentList[randomSerial]
     }
+    static func generateQuoteFromResourcesFile(file fileURL: URL) {
+        func getOnePartOfString(_ s: String) -> (serial: Int, label: Int, content: String, cutString: String, isEnd: Bool) {
+            let startIndexOfOnePart = s.firstIndex(of: "#")
+            let indexOfSerial = s.index(startIndexOfOnePart!, offsetBy: 1)
+            let serial = s[indexOfSerial].wholeNumberValue
+            let indexOfQuoteLabel = s.index(startIndexOfOnePart!, offsetBy: 3)
+            let label = s[indexOfQuoteLabel].wholeNumberValue
+            let nextIndexOfOnePart = s[indexOfQuoteLabel...].firstIndex(of: "#")
+            let firtIndexOfContent = s.index(startIndexOfOnePart!, offsetBy: 5)
+            var isEnd: Bool
+            var lastIndexOfContent: String.Index!
+            var cutString: String = ""
+            var content: String = ""
+            if s[indexOfQuoteLabel...].firstIndex(of: "#") != nil {
+                isEnd = false
+                lastIndexOfContent = s.index(nextIndexOfOnePart!, offsetBy: -1)
+                cutString = String(s[nextIndexOfOnePart!...])
+                content = String(s[firtIndexOfContent...lastIndexOfContent])
+            }else{
+                isEnd = true
+                lastIndexOfContent = s.endIndex
+                content = String(s[firtIndexOfContent..<lastIndexOfContent])
+            }
+            
+            return (serial!, label!, content, cutString, isEnd)
+        }
+        func writeDataToInstance(serial: Int, label: Int, content: String) {
+            switch label {
+            case 0:
+                quoteContentList.append(quoteContent.init(defaultContent: content))
+            case 1:
+                quoteContentList[serial].alternateContent = content
+            case 2:
+                quoteContentList[serial].from = content
+            default:
+                print("Error:Wrong txt format at content")
+            }
+        }
+        do {
+            let wholeContentOfFile = try String(contentsOf: locationResourcesFileURL!, encoding: .utf8)
+            var temp = getOnePartOfString(wholeContentOfFile)
+            writeDataToInstance(serial: temp.serial, label: temp.label, content: temp.content)
+            while !temp.isEnd  {
+                temp = getOnePartOfString(temp.cutString)
+                writeDataToInstance(serial: temp.serial, label: temp.label, content: temp.content)
+            }
+        }catch {
+            print("Error:Failed to read resources.txt")
+        }
+    }
     
     var defaultContent: String
     var alternateContent: String?
-    var from: String
+    var from: String?
 
     mutating func displayContent() {
         func AddAPIForSingleQuote(quote: String) -> String {
@@ -86,12 +142,15 @@ struct quoteContent {
         }else {
             print(AddAPIForSingleQuote(quote: defaultContent), terminator:"")
         }
-        for _ in 0..<(maxCharDefault - from.count) {
+        let backspaceNumberForwardFrom = maxCharDefault - from!.count
+        for _ in 0..<backspaceNumberForwardFrom {
             print(" ", terminator:"")
         }
-        print("--",from,"| trim=false")
+        print("--",from!,"| trim=false")
     }
-
+    init(defaultContent: String) {
+        self.defaultContent = defaultContent
+    }
     init(defaultContent: String,from: String) {
         self.defaultContent = defaultContent
         self.from = from
@@ -103,12 +162,14 @@ struct quoteContent {
     }
 }
 
+quoteContent.generateQuoteFromResourcesFile(file: locationResourcesFileURL!)
+
 print("📖")
 
 print("---\n","Pinned")
-
+quoteContent.quoteContentList[0].displayContent()
 print("---\n","Ramdom")
-
-
-print("---\n","open resources| bash='vi /Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt' terminal=true")
+var randomQuote = quoteContent.getRandomQuote()
+randomQuote.displayContent()
+print("---\n","open resources| bash='open \(locationResourcesFile)' terminal=true")
 print("---\n","reload | refresh=true ")
