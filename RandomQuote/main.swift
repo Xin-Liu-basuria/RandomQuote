@@ -8,7 +8,7 @@
 import Foundation
 
 let maxCharDefault = 60
-let maxCharAlternate = 35
+let maxCharAlternate = 30
 let quoteColor = "#C46243"
 let fontSize = 13
 let bitbarAPI = "| color=\(quoteColor) length=\(maxCharDefault) size=\(fontSize)\n"
@@ -50,7 +50,7 @@ struct quoteContent {
                 lastIndexOfContent = s.endIndex
                 content = String(s[firtIndexOfContent..<lastIndexOfContent])
             }
-            
+            content = content.replacingOccurrences(of: "\n", with: " ")
             return (serial!, label!, content, cutString, isEnd)
         }
         func writeDataToInstance(serial: Int, label: Int, content: String) {
