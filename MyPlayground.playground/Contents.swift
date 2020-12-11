@@ -1,10 +1,3 @@
-//
-//  main.swift
-//  RandomQuote
-//
-//  Created by Xin Liu on 12/7/20.
-//
-
 import Foundation
 
 let maxCharDefault = 60
@@ -103,12 +96,3 @@ struct quoteContent {
     }
 }
 
-print("📖")
-
-print("---\n","Pinned")
-
-print("---\n","Ramdom")
-
-
-print("---\n","open resources| bash='vi /Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt' terminal=true")
-print("---\n","reload | refresh=true ")
