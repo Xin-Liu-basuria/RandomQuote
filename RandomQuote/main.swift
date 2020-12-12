@@ -5,18 +5,29 @@
 //  Created by Xin Liu on 12/7/20.
 //  Copyright @2020 Xin Liu, All rights reserved.
 //
-//TODO: add notification
 import Foundation
 
+//set default config value in order to avoid the crash due to lacking of parameter
 let defaultMaxCharDefault = 60
 let defaultMaxCharAlternate = 30
 let defaultQuoteColor = "#C46243"
 let defautlFontSize = 13
 let defaultFont = "Courier"
+let defaultNotificationHour = 9
+let defaultNotificationPerDay = 1
+let defaultNotificationEndHour = 22
 
+//get the current time to judge if send notification
+//PS:To make the function working normally,please run the script once per hour
+let currentDate = Date()
+let calendar = Calendar.current
+let currentHours = calendar.component(.hour, from: currentDate)
+
+//set the config file path,please replace it with your file path!!!
 let locationResourcesFile = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt"
 let locationCongfig = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/config"
 
+//make sure the file path is right
 if URL(string: locationResourcesFile) == nil {
     exit(1)
 }
@@ -34,11 +45,21 @@ struct configFile {
     var fontKind: String?
     var pinQuote: [Int]?
     var backspaceNumberForwardFrom: Int?
+    var notificationHour: Int?
+    var notificationPerDay: Int?
     init(file fileURL: URL) {
         let wholeContentOfConfig = try! String(contentsOf: fileURL, encoding: .utf8)
         let singleLineOfConfig = wholeContentOfConfig.split(separator: "\n")
 
-        let configFactorList = ["maxCharDefault", "maxCharAlternate", "quoteColor", "fontSize", "fontKind", "pinQuote", "backspaceNumberForwardFrom"]
+        let configFactorList = ["maxCharDefault",
+                                "maxCharAlternate",
+                                "quoteColor",
+                                "fontSize",
+                                "fontKind",
+                                "pinQuote",
+                                "backspaceNumberForwardFrom",
+                                "notificationHour",
+                                "notificationPerDay"]
         func toInt(_ s: String) -> Int {
             let indexStart = s.firstIndex(where: {$0.isNumber})
             return Int(s[indexStart!...])!
@@ -71,18 +92,23 @@ struct configFile {
                             }
                         case configFactorList[6]:
                             self.backspaceNumberForwardFrom = toInt(String(ConfigFactorAndValue[1]))
+                            
+                        case configFactorList[7]:
+                            self.notificationHour = toInt(String(ConfigFactorAndValue[1]))
+                        case configFactorList[8]:
+                            self.notificationPerDay = toInt(String(ConfigFactorAndValue[1]))
                         default:
                             print("Error")
                     }
                 }
             }
         }
-    }
-    init(maxCharDefault: Int, maxCharAlternate: Int, quoteColor: String, fontSize: Int) {
-        self.maxCharDefault = maxCharDefault
-        self.maxCharAlternate = maxCharAlternate
-        self.quoteColor = quoteColor
-        self.fontSize = fontSize
+        if self.notificationHour == nil {
+            self.notificationHour = defaultNotificationHour
+        }
+        if self.notificationPerDay == nil {
+            self.notificationPerDay = defaultNotificationPerDay
+        }
     }
 }
 var config = configFile.init(file: locationCongfigURL!)
@@ -90,6 +116,31 @@ var config = configFile.init(file: locationCongfigURL!)
 
 let bitbarAPI = "| color=\(config.quoteColor!) length=\((config.maxCharDefault ?? defaultMaxCharDefault)+1) size=\(config.fontSize!) font=\(config.fontKind ?? defaultFont)\n"
 let bitbarAlternateAPI = "| color=\(config.quoteColor!) length=\((config.maxCharDefault ?? defaultMaxCharAlternate)+1) size=\(config.fontSize!) font=\(config.fontKind ?? defaultFont) alternate=true\n"
+
+//Send notification at specific time use Apple script
+let task = Process()
+task.launchPath = "/usr/bin/osascript"
+task.arguments = ["-e display notification \"Bible Time.\" with title \"RandomQuote\" sound name \"Frog\""]
+
+var whetherNotification: Bool = false
+var notificationHourList: [Int] = [config.notificationHour!, defaultNotificationEndHour]
+if config.notificationPerDay! > 2 {
+    let intervalBetweenNotification = (defaultNotificationEndHour - config.notificationHour!) / (config.notificationPerDay! - 2)
+    var temp: Int = config.notificationHour!
+    for _ in 0..<(config.notificationPerDay! - 2) {
+        temp += intervalBetweenNotification
+        notificationHourList.append(temp)
+    }
+}
+for hour in notificationHourList {
+    if currentHours == hour {
+        whetherNotification = true
+    }
+}
+if whetherNotification {
+    task.launch()
+}
+
 
 struct quoteContent {
     static var quoteContentList: [quoteContent] = []
@@ -241,6 +292,7 @@ struct quoteContent {
     }
 }
 
+//Initialize the quote list
 quoteContent.generateQuoteListFromResourcesFile(file: locationResourcesFileURL!)
 
 print("📖")
@@ -252,6 +304,8 @@ if config.pinQuote != nil {
     }
 }
 print("---\n","Ramdom")
+
+//get the random quote which doesn't display
 var randomQuote = quoteContent.getRandomQuote()
 if config.pinQuote != nil {
     while config.pinQuote!.contains(randomQuote.serial) {
@@ -261,5 +315,4 @@ if config.pinQuote != nil {
 randomQuote.content.displayContent()
 print("---\n","open resources| bash='open \(locationResourcesFile)' terminal=true")
 print("---\n","reload | refresh=true ")
-
 
