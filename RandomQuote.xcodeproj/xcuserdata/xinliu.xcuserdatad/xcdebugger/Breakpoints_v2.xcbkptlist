@@ -14,8 +14,8 @@
             filePath = "RandomQuote/main.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "269"
-            endingLineNumber = "269"
+            startingLineNumber = "276"
+            endingLineNumber = "276"
             landmarkName = "AddAPIForParallelQuote(quoteDefault:quoteAlternate:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -30,8 +30,24 @@
             filePath = "RandomQuote/main.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "274"
-            endingLineNumber = "274"
+            startingLineNumber = "281"
+            endingLineNumber = "281"
+            landmarkName = "displayContent()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "0C98F6C1-0DD5-4CFF-B9B3-B64332F1C0A4"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "RandomQuote/main.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "269"
+            endingLineNumber = "269"
             landmarkName = "AddAPIForParallelQuote(quoteDefault:quoteAlternate:)"
             landmarkType = "9">
          </BreakpointContent>

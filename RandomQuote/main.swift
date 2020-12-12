@@ -241,28 +241,28 @@ struct quoteContent {
             }
             //add backspace to make two quotes same as the number of lines
             if linesQuoteDefault > linesQuoteAlternate {
-                let backspaceNumber = (linesQuoteDefault - linesQuoteAlternate + 1) * config.maxCharAlternate!
+                let backspaceNumber = (linesQuoteDefault - linesQuoteAlternate + 1) * (config.maxCharAlternate! + 1)
                 for _ in 0..<backspaceNumber {
                     copyQuoteAlternate.append(" ")
                 }
                 //add a line for avoiding out of bounds when cutting string
-                for _ in 0..<config.maxCharDefault! {
+                for _ in 0...(config.maxCharDefault! + max(linesQuoteDefault, linesQuoteAlternate) ) {
                     copyQuoteDefault.append(" ")
                 }
             }else if linesQuoteDefault < linesQuoteAlternate {
-                let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault + 1) * config.maxCharDefault!
+                let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault + 1) * (config.maxCharDefault! + 1)
                 for _ in 0..<backspaceNumber {
                     copyQuoteDefault.append(" ")
                 }
                 //add a line for avoiding out of bounds when cutting string
-                for _ in 0..<config.maxCharAlternate! {
+                for _ in 0...(config.maxCharAlternate! + max(linesQuoteDefault, linesQuoteAlternate) ) {
                     copyQuoteAlternate.append(" ")
                 }
             }else {
-                for _ in 0..<config.maxCharDefault! {
+                for _ in 0...(config.maxCharDefault! + max(linesQuoteDefault, linesQuoteAlternate) ) {
                     copyQuoteDefault.append(" ")
                 }
-                for _ in 0..<config.maxCharAlternate! {
+                for _ in 0...(config.maxCharAlternate! + max(linesQuoteDefault, linesQuoteAlternate) ) {
                     copyQuoteAlternate.append(" ")
                 }
             }
