@@ -13,9 +13,6 @@ let defaultMaxCharAlternate = 30
 let defaultQuoteColor = "#C46243"
 let defautlFontSize = 13
 let defaultFont = "Courier"
-let defaultNotificationHour = 9
-let defaultNotificationPerDay = 1
-let defaultNotificationEndHour = 22
 
 //get the current time to judge if send notification
 //PS:To make the function working normally,please run the script once per hour
@@ -45,8 +42,7 @@ struct configFile {
     var fontKind: String?
     var pinQuote: [Int]?
     var backspaceNumberForwardFrom: Int?
-    var notificationHour: Int?
-    var notificationPerDay: Int?
+    var notificationHourList: [Int]?
     init(file fileURL: URL) {
         let wholeContentOfConfig = try! String(contentsOf: fileURL, encoding: .utf8)
         let singleLineOfConfig = wholeContentOfConfig.split(separator: "\n")
@@ -58,8 +54,7 @@ struct configFile {
                                 "fontKind",
                                 "pinQuote",
                                 "backspaceNumberForwardFrom",
-                                "notificationHour",
-                                "notificationPerDay"]
+                                "notificationHourList",]
         func toInt(_ s: String) -> Int {
             let indexStart = s.firstIndex(where: {$0.isNumber})
             return Int(s[indexStart!...])!
@@ -94,20 +89,21 @@ struct configFile {
                             self.backspaceNumberForwardFrom = toInt(String(ConfigFactorAndValue[1]))
                             
                         case configFactorList[7]:
-                            self.notificationHour = toInt(String(ConfigFactorAndValue[1]))
-                        case configFactorList[8]:
-                            self.notificationPerDay = toInt(String(ConfigFactorAndValue[1]))
+                            self.notificationHourList = []
+                            let ToString = String(ConfigFactorAndValue[1])
+                            var temp = ToString.firstIndex(of: "[")
+                            let indexStart = ToString.index(temp!, offsetBy: 1)
+                            temp = ToString.firstIndex(of: "]")
+                            let indexEnd = ToString.index(temp!, offsetBy: -1)
+                            let notificationHourListString = ToString[indexStart...indexEnd].split(separator: ",")
+                            for i in 0..<notificationHourListString.count {
+                                self.notificationHourList?.append(Int(String(notificationHourListString[i]))!)
+                            }
                         default:
                             print("Error")
                     }
                 }
             }
-        }
-        if self.notificationHour == nil {
-            self.notificationHour = defaultNotificationHour
-        }
-        if self.notificationPerDay == nil {
-            self.notificationPerDay = defaultNotificationPerDay
         }
     }
 }
@@ -123,18 +119,11 @@ task.launchPath = "/usr/bin/osascript"
 task.arguments = ["-e display notification \"Bible Time.\" with title \"RandomQuote\" sound name \"Frog\""]
 
 var whetherNotification: Bool = false
-var notificationHourList: [Int] = [config.notificationHour!, defaultNotificationEndHour]
-if config.notificationPerDay! > 2 {
-    let intervalBetweenNotification = (defaultNotificationEndHour - config.notificationHour!) / (config.notificationPerDay! - 2)
-    var temp: Int = config.notificationHour!
-    for _ in 0..<(config.notificationPerDay! - 2) {
-        temp += intervalBetweenNotification
-        notificationHourList.append(temp)
-    }
-}
-for hour in notificationHourList {
-    if currentHours == hour {
-        whetherNotification = true
+if config.notificationHourList != nil {
+    for hour in config.notificationHourList! {
+        if currentHours == hour {
+            whetherNotification = true
+        }
     }
 }
 if whetherNotification {
@@ -304,22 +293,29 @@ quoteContent.generateQuoteListFromResourcesFile(file: locationResourcesFileURL!)
 
 print("📖")
 
-print("---\n","Pinned")
 if config.pinQuote != nil {
+    print("---\n","Pinned")
     for i in config.pinQuote! {
         quoteContent.quoteContentList[i].displayContent()
     }
 }
-print("---\n","Ramdom")
 
 //get the random quote which doesn't display
 var randomQuote = quoteContent.getRandomQuote()
 if config.pinQuote != nil {
+    var tryTimes = 0
     while config.pinQuote!.contains(randomQuote.serial) {
         randomQuote = quoteContent.getRandomQuote()
+        //Avoid being dead circle
+        tryTimes += 1
+        if tryTimes > 10 {
+            break
+        }
     }
 }
+print("---\n","Ramdom")
 randomQuote.content.displayContent()
-print("---\n","open resources| bash='open \(locationResourcesFile)' terminal=true")
+
+print("---\n","open file| bash='open \(locationResourcesFile)' terminal=true")
 print("---\n","reload | refresh=true ")
 
