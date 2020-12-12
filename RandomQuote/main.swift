@@ -30,11 +30,12 @@ struct configFile {
     var fontSize: Int?
     var fontKind: String?
     var pinQuote: [Int]?
+    var backspaceNumberForwardFrom: Int?
     init(file fileURL: URL) {
         let wholeContentOfConfig = try! String(contentsOf: fileURL, encoding: .utf8)
         let singleLineOfConfig = wholeContentOfConfig.split(separator: "\n")
 
-        let configFactorList = ["maxCharDefault", "maxCharAlternate", "quoteColor", "fontSize", "fontKind", "pinQuote"]
+        let configFactorList = ["maxCharDefault", "maxCharAlternate", "quoteColor", "fontSize", "fontKind", "pinQuote", "backspaceNumberForwardFrom"]
         func toInt(_ s: String) -> Int {
             let indexStart = s.firstIndex(where: {$0.isNumber})
             return Int(s[indexStart!...])!
@@ -44,29 +45,31 @@ struct configFile {
                 if singleConfig.contains(configFactor) {
                     let ConfigFactorAndValue = singleConfig.split(separator: "=")
                     switch configFactor {
-                    case configFactorList[0]:
-                        self.maxCharDefault = toInt(String(ConfigFactorAndValue[1]))
-                    case configFactorList[1]:
-                        self.maxCharAlternate = toInt(String(ConfigFactorAndValue[1]))
-                    case configFactorList[2]:
-                        self.quoteColor = String(ConfigFactorAndValue[1])
-                    case configFactorList[3]:
-                        self.fontSize = toInt(String(ConfigFactorAndValue[1]))
-                    case configFactorList[4]:
-                        self.fontKind = String(ConfigFactorAndValue[1])
-                    case configFactorList[5]:
-                        self.pinQuote = []
-                        let ToString = String(ConfigFactorAndValue[1])
-                        var temp = ToString.firstIndex(of: "[")
-                        let indexStart = ToString.index(temp!, offsetBy: 1)
-                        temp = ToString.firstIndex(of: "]")
-                        let indexEnd = ToString.index(temp!, offsetBy: -1)
-                        let pinSerialArray = ToString[indexStart...indexEnd].split(separator: ",")
-                        for i in 0..<pinSerialArray.count {
-                            self.pinQuote?.append(Int(String(pinSerialArray[i]))!)
-                        }
-                    default:
-                        print("Error")
+                        case configFactorList[0]:
+                            self.maxCharDefault = toInt(String(ConfigFactorAndValue[1]))
+                        case configFactorList[1]:
+                            self.maxCharAlternate = toInt(String(ConfigFactorAndValue[1]))
+                        case configFactorList[2]:
+                            self.quoteColor = String(ConfigFactorAndValue[1])
+                        case configFactorList[3]:
+                            self.fontSize = toInt(String(ConfigFactorAndValue[1]))
+                        case configFactorList[4]:
+                            self.fontKind = String(ConfigFactorAndValue[1])
+                        case configFactorList[5]:
+                            self.pinQuote = []
+                            let ToString = String(ConfigFactorAndValue[1])
+                            var temp = ToString.firstIndex(of: "[")
+                            let indexStart = ToString.index(temp!, offsetBy: 1)
+                            temp = ToString.firstIndex(of: "]")
+                            let indexEnd = ToString.index(temp!, offsetBy: -1)
+                            let pinSerialArray = ToString[indexStart...indexEnd].split(separator: ",")
+                            for i in 0..<pinSerialArray.count {
+                                self.pinQuote?.append(Int(String(pinSerialArray[i]))!)
+                            }
+                        case configFactorList[6]:
+                            self.backspaceNumberForwardFrom = toInt(String(ConfigFactorAndValue[1]))
+                        default:
+                            print("Error")
                     }
                 }
             }
@@ -215,9 +218,7 @@ struct quoteContent {
         }else {
             print(AddAPIForSingleQuote(quote: defaultContent), terminator:"")
         }
-        //TODO: make this value being a config
-        let backspaceNumberForwardFrom = config.maxCharDefault! - from!.count
-        for _ in 0..<backspaceNumberForwardFrom {
+        for _ in 0..<(config.backspaceNumberForwardFrom ?? (config.maxCharDefault! - from!.count)) {
             print(" ", terminator:"")
         }
         print("--",from!,"| trim=false")
