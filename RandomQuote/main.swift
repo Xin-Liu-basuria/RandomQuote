@@ -249,12 +249,19 @@ struct quoteContent {
                 for _ in 0..<config.maxCharDefault! {
                     copyQuoteDefault.append(" ")
                 }
-            }else {
+            }else if linesQuoteDefault < linesQuoteAlternate {
                 let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault + 1) * config.maxCharDefault!
                 for _ in 0..<backspaceNumber {
                     copyQuoteDefault.append(" ")
                 }
                 //add a line for avoiding out of bounds when cutting string
+                for _ in 0..<config.maxCharAlternate! {
+                    copyQuoteAlternate.append(" ")
+                }
+            }else {
+                for _ in 0..<config.maxCharDefault! {
+                    copyQuoteDefault.append(" ")
+                }
                 for _ in 0..<config.maxCharAlternate! {
                     copyQuoteAlternate.append(" ")
                 }
