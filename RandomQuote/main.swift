@@ -4,22 +4,87 @@
 //
 //  Created by Xin Liu on 12/7/20.
 //
-
 import Foundation
 
-let maxCharDefault = 60
-let maxCharAlternate = 30
-let quoteColor = "#C46243"
-let fontSize = 13
-let bitbarAPI = "| color=\(quoteColor) length=\(maxCharDefault) size=\(fontSize)\n"
-let bitbarAlternateAPI = "| color=\(quoteColor) length=\(maxCharDefault) size=\(fontSize) alternate=true\n"
+let defaultMaxCharDefault = 60
+let defaultMaxCharAlternate = 30
+let defaultQuoteColor = "#C46243"
+let defautlFontSize = 13
+
 let locationResourcesFile = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt"
+let locationCongfig = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/config"
 
 if URL(string: locationResourcesFile) == nil {
     exit(1)
 }
-var locationResourcesFileURL = URL(string: locationResourcesFile)
+if URL(string: locationCongfig) == nil {
+    exit(1)
+}
+let locationResourcesFileURL = URL(string: locationResourcesFile)
+let locationCongfigURL = URL(string: locationCongfig)
+//FIXME:init methods via URL don't initialize "pinQuote" successfully
+struct configFile {
+    var maxCharDefault: Int?
+    var maxCharAlternate: Int?
+    var quoteColor: String?
+    var fontSize: Int?
+    var fontKind: String?
+    var pinQuote: [Int]?
+    init(file fileURL: URL) {
+        let wholeContentOfConfig = try! String(contentsOf: fileURL, encoding: .utf8)
+        let singleLineOfConfig = wholeContentOfConfig.split(separator: "\n")
 
+        let configFactorList = ["maxCharDefault", "maxCharAlternate", "quoteColor", "fontSize", "fontKind", "pinQuote"]
+        func toInt(_ s: String) -> Int {
+            let indexStart = s.firstIndex(where: {$0.isNumber})
+            return Int(s[indexStart!...])!
+        }
+        for singleConfig in singleLineOfConfig {
+            for configFactor in configFactorList {
+                if singleConfig.contains(configFactor) {
+                    let ConfigFactorAndValue = singleConfig.split(separator: "=")
+                    switch configFactor {
+                    case configFactorList[0]:
+                        self.maxCharDefault = toInt(String(ConfigFactorAndValue[1]))
+                    case configFactorList[1]:
+                        self.maxCharAlternate = toInt(String(ConfigFactorAndValue[1]))
+                    case configFactorList[2]:
+                        self.quoteColor = String(ConfigFactorAndValue[1])
+                    case configFactorList[3]:
+                        self.fontSize = toInt(String(ConfigFactorAndValue[1]))
+                    case configFactorList[4]:
+                        self.fontKind = String(ConfigFactorAndValue[1])
+                    case configFactorList[5]:
+                        self.pinQuote = []
+                        let ToString = String(ConfigFactorAndValue[1])
+                        var temp = ToString.firstIndex(of: "[")
+                        let indexStart = ToString.index(temp!, offsetBy: 1)
+                        temp = ToString.firstIndex(of: "]")
+                        let indexEnd = ToString.index(temp!, offsetBy: -1)
+                        let pinSerialArray = ToString[indexStart...indexEnd].split(separator: ",")
+                        for i in 0..<pinSerialArray.count {
+                            self.pinQuote?.append(Int(String(pinSerialArray[i]))!)
+                        }
+                    default:
+                        print("Error")
+                    }
+                }
+            }
+        }
+    }
+    init(maxCharDefault: Int, maxCharAlternate: Int, quoteColor: String, fontSize: Int) {
+        self.maxCharDefault = maxCharDefault
+        self.maxCharAlternate = maxCharAlternate
+        self.quoteColor = quoteColor
+        self.fontSize = fontSize
+    }
+}
+var config = configFile.init(file: locationCongfigURL!)
+//var config = configFile.init(maxCharDefault: defaultMaxCharDefault, maxCharAlternate: defaultMaxCharAlternate, quoteColor: defaultQuoteColor, fontSize: defautlFontSize)
+
+let bitbarAPI = "| color=\(config.quoteColor!) length=\(config.maxCharDefault ?? defaultMaxCharDefault) size=\(config.fontSize!) font=\(config.fontKind ?? " ")\n"
+let bitbarAlternateAPI = "| color=\(config.quoteColor!) length=\(config.maxCharDefault ?? defaultMaxCharAlternate) size=\(config.fontSize!) font=\(config.fontKind ?? " ") alternate=true\n"
+//FIXME: displayContent fail to display all content
 struct quoteContent {
     static var quoteContentList: [quoteContent] = []
     static func getRandomQuote() -> quoteContent {
@@ -87,12 +152,12 @@ struct quoteContent {
                 var result: String = quote
                 let lengthOfBitbarAPI = bitbarAPI.count
                 let lengthOfQuoteSentence = quote.count
-                var i = maxCharDefault, n = maxCharDefault
+            var i = config.maxCharDefault!, n = config.maxCharDefault!
                 while n < lengthOfQuoteSentence {
                     let insertIndex = result.index(result.startIndex, offsetBy: i)
                     result.insert(contentsOf: bitbarAPI, at: insertIndex)
-                    i += maxCharDefault + lengthOfBitbarAPI
-                    n += maxCharDefault
+                    i += config.maxCharDefault! + lengthOfBitbarAPI
+                    n += config.maxCharDefault!
                 }
                 result.append(bitbarAPI)
                 return result
@@ -102,14 +167,14 @@ struct quoteContent {
             var copyQuoteDefault = quoteDefault, copyQuoteAlternate = quoteAlternate
             let lengthQuoteDefault = quoteDefault.count
             let lengthQuoteAlternate = quoteAlternate.count
-            let linesQuoteDefault = Int(Double(lengthQuoteDefault / maxCharDefault) + 0.5)
-            let linesQuoteAlternate = Int(Double(lengthQuoteAlternate / maxCharAlternate) + 0.5)
-            var i = maxCharDefault, j = maxCharAlternate
+            let linesQuoteDefault = Int(Double(lengthQuoteDefault / config.maxCharDefault!) + 0.5)
+            let linesQuoteAlternate = Int(Double(lengthQuoteAlternate / config.maxCharAlternate!) + 0.5)
+            var i = config.maxCharDefault!, j = config.maxCharAlternate!
             func addToResult(_ i: Int,_ j: Int) {
                 let indexDefault = copyQuoteDefault.index(copyQuoteDefault.startIndex, offsetBy: i)
-                let lastIndexDefault = copyQuoteDefault.index(indexDefault, offsetBy: -maxCharDefault)
+                let lastIndexDefault = copyQuoteDefault.index(indexDefault, offsetBy: -config.maxCharDefault!)
                 let indexAlternate = copyQuoteAlternate.index(copyQuoteAlternate.startIndex, offsetBy: j)
-                let lastIndexAlternate = copyQuoteAlternate.index(indexAlternate, offsetBy: -maxCharAlternate)
+                let lastIndexAlternate = copyQuoteAlternate.index(indexAlternate, offsetBy: -config.maxCharAlternate!)
                 let tempDefault = copyQuoteDefault[lastIndexDefault...indexDefault]
                 let tempAlternate = copyQuoteAlternate[lastIndexAlternate...indexAlternate]
                 result.append(contentsOf: tempDefault)
@@ -119,20 +184,20 @@ struct quoteContent {
             }
             //add backspace to make two quotes same as the number of lines
             if linesQuoteDefault > linesQuoteAlternate {
-                let backspaceNumber = (linesQuoteDefault - linesQuoteAlternate) * maxCharAlternate
+                let backspaceNumber = (linesQuoteDefault - linesQuoteAlternate) * config.maxCharAlternate!
                 for _ in 0..<backspaceNumber {
                     copyQuoteAlternate.append(" ")
                 }
             }else {
-                let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault) * maxCharDefault
+                let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault) * config.maxCharDefault!
                 for _ in 0..<backspaceNumber {
                     copyQuoteDefault.append(" ")
                 }
             }
             for _ in 0..<max(linesQuoteDefault, linesQuoteAlternate) {
                 addToResult(i, j)
-                i += maxCharDefault
-                j += maxCharAlternate
+                i += config.maxCharDefault!
+                j += config.maxCharAlternate!
             }
             return result
         }
@@ -142,7 +207,7 @@ struct quoteContent {
         }else {
             print(AddAPIForSingleQuote(quote: defaultContent), terminator:"")
         }
-        let backspaceNumberForwardFrom = maxCharDefault - from!.count
+        let backspaceNumberForwardFrom = config.maxCharDefault! - from!.count
         for _ in 0..<backspaceNumberForwardFrom {
             print(" ", terminator:"")
         }
@@ -167,9 +232,15 @@ quoteContent.generateQuoteFromResourcesFile(file: locationResourcesFileURL!)
 print("📖")
 
 print("---\n","Pinned")
-quoteContent.quoteContentList[0].displayContent()
+if config.pinQuote != nil {
+    for i in config.pinQuote! {
+        quoteContent.quoteContentList[i].displayContent()
+    }
+}
+//TODO: NOT display already pinned quote
 print("---\n","Ramdom")
 var randomQuote = quoteContent.getRandomQuote()
 randomQuote.displayContent()
 print("---\n","open resources| bash='open \(locationResourcesFile)' terminal=true")
 print("---\n","reload | refresh=true ")
+
