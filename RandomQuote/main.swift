@@ -22,7 +22,7 @@ if URL(string: locationCongfig) == nil {
 }
 let locationResourcesFileURL = URL(string: locationResourcesFile)
 let locationCongfigURL = URL(string: locationCongfig)
-//FIXME:init methods via URL don't initialize "pinQuote" successfully
+
 struct configFile {
     var maxCharDefault: Int?
     var maxCharAlternate: Int?
@@ -84,7 +84,7 @@ var config = configFile.init(file: locationCongfigURL!)
 
 let bitbarAPI = "| color=\(config.quoteColor!) length=\(config.maxCharDefault ?? defaultMaxCharDefault) size=\(config.fontSize!) font=\(config.fontKind ?? " ")\n"
 let bitbarAlternateAPI = "| color=\(config.quoteColor!) length=\(config.maxCharDefault ?? defaultMaxCharAlternate) size=\(config.fontSize!) font=\(config.fontKind ?? " ") alternate=true\n"
-//FIXME: displayContent fail to display all content
+
 struct quoteContent {
     static var quoteContentList: [quoteContent] = []
     static func getRandomQuote() -> quoteContent {
@@ -146,7 +146,7 @@ struct quoteContent {
     var defaultContent: String
     var alternateContent: String?
     var from: String?
-
+//FIXME: repeat character when change line.
     mutating func displayContent() {
         func AddAPIForSingleQuote(quote: String) -> String {
                 var result: String = quote
@@ -167,8 +167,8 @@ struct quoteContent {
             var copyQuoteDefault = quoteDefault, copyQuoteAlternate = quoteAlternate
             let lengthQuoteDefault = quoteDefault.count
             let lengthQuoteAlternate = quoteAlternate.count
-            let linesQuoteDefault = Int(Double(lengthQuoteDefault / config.maxCharDefault!) + 0.5)
-            let linesQuoteAlternate = Int(Double(lengthQuoteAlternate / config.maxCharAlternate!) + 0.5)
+            let linesQuoteDefault = Int( (Double(lengthQuoteDefault) / Double(config.maxCharDefault!)) + 1.0 )
+            let linesQuoteAlternate = Int( (Double(lengthQuoteAlternate) / Double(config.maxCharAlternate!)) + 1.0 )
             var i = config.maxCharDefault!, j = config.maxCharAlternate!
             func addToResult(_ i: Int,_ j: Int) {
                 let indexDefault = copyQuoteDefault.index(copyQuoteDefault.startIndex, offsetBy: i)
@@ -184,14 +184,22 @@ struct quoteContent {
             }
             //add backspace to make two quotes same as the number of lines
             if linesQuoteDefault > linesQuoteAlternate {
-                let backspaceNumber = (linesQuoteDefault - linesQuoteAlternate) * config.maxCharAlternate!
+                let backspaceNumber = (linesQuoteDefault - linesQuoteAlternate + 1) * config.maxCharAlternate!
                 for _ in 0..<backspaceNumber {
                     copyQuoteAlternate.append(" ")
                 }
+                //add a line for avoiding out of bounds when cutting string
+                for _ in 0..<config.maxCharDefault! {
+                    copyQuoteDefault.append(" ")
+                }
             }else {
-                let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault) * config.maxCharDefault!
+                let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault + 1) * config.maxCharDefault!
                 for _ in 0..<backspaceNumber {
                     copyQuoteDefault.append(" ")
+                }
+                //add a line for avoiding out of bounds when cutting string
+                for _ in 0..<config.maxCharAlternate! {
+                    copyQuoteAlternate.append(" ")
                 }
             }
             for _ in 0..<max(linesQuoteDefault, linesQuoteAlternate) {
@@ -207,6 +215,7 @@ struct quoteContent {
         }else {
             print(AddAPIForSingleQuote(quote: defaultContent), terminator:"")
         }
+        //TODO: make this value being a config
         let backspaceNumberForwardFrom = config.maxCharDefault! - from!.count
         for _ in 0..<backspaceNumberForwardFrom {
             print(" ", terminator:"")
