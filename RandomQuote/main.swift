@@ -110,8 +110,8 @@ struct configFile {
 var config = configFile.init(file: locationCongfigURL!)
 //var config = configFile.init(maxCharDefault: defaultMaxCharDefault, maxCharAlternate: defaultMaxCharAlternate, quoteColor: defaultQuoteColor, fontSize: defautlFontSize)
 
-let bitbarAPI = "| color=\(config.quoteColor!) length=\((config.maxCharDefault ?? defaultMaxCharDefault)+1) size=\(config.fontSize!) font=\(config.fontKind ?? defaultFont)\n"
-let bitbarAlternateAPI = "| color=\(config.quoteColor!) length=\((config.maxCharDefault ?? defaultMaxCharAlternate)+1) size=\(config.fontSize!) font=\(config.fontKind ?? defaultFont) alternate=true\n"
+let bitbarAPI = "| color=\(config.quoteColor ?? defaultQuoteColor) length=\((config.maxCharDefault ?? defaultMaxCharDefault)+1) size=\(config.fontSize ?? defautlFontSize) font=\(config.fontKind ?? defaultFont)\n"
+let bitbarAlternateAPI = "| color=\(config.quoteColor ?? defaultQuoteColor) length=\((config.maxCharDefault ?? defaultMaxCharAlternate)+1) size=\(config.fontSize ?? defautlFontSize) font=\(config.fontKind ?? defaultFont) alternate=true\n"
 
 //Send notification at specific time use Apple script
 let task = Process()
