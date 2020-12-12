@@ -12,6 +12,7 @@ let defaultMaxCharDefault = 60
 let defaultMaxCharAlternate = 30
 let defaultQuoteColor = "#C46243"
 let defautlFontSize = 13
+let defaultFont = "Courier"
 
 let locationResourcesFile = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt"
 let locationCongfig = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/config"
@@ -87,8 +88,8 @@ struct configFile {
 var config = configFile.init(file: locationCongfigURL!)
 //var config = configFile.init(maxCharDefault: defaultMaxCharDefault, maxCharAlternate: defaultMaxCharAlternate, quoteColor: defaultQuoteColor, fontSize: defautlFontSize)
 
-let bitbarAPI = "| color=\(config.quoteColor!) length=\(config.maxCharDefault ?? defaultMaxCharDefault) size=\(config.fontSize!) font=\(config.fontKind ?? " ")\n"
-let bitbarAlternateAPI = "| color=\(config.quoteColor!) length=\(config.maxCharDefault ?? defaultMaxCharAlternate) size=\(config.fontSize!) font=\(config.fontKind ?? " ") alternate=true\n"
+let bitbarAPI = "| color=\(config.quoteColor!) length=\((config.maxCharDefault ?? defaultMaxCharDefault)+1) size=\(config.fontSize!) font=\(config.fontKind ?? defaultFont)\n"
+let bitbarAlternateAPI = "| color=\(config.quoteColor!) length=\((config.maxCharDefault ?? defaultMaxCharAlternate)+1) size=\(config.fontSize!) font=\(config.fontKind ?? defaultFont) alternate=true\n"
 
 struct quoteContent {
     static var quoteContentList: [quoteContent] = []
@@ -151,22 +152,22 @@ struct quoteContent {
     var defaultContent: String
     var alternateContent: String?
     var from: String?
-
+    
     mutating func displayContent() {
         func AddAPIForSingleQuote(quote: String) -> String {
-                var result: String = quote
-                let lengthOfBitbarAPI = bitbarAPI.count
-                let lengthOfQuoteSentence = quote.count
+            var result: String = quote
+            let lengthOfBitbarAPI = bitbarAPI.count
+            let lengthOfQuoteSentence = quote.count
             var i = config.maxCharDefault!, n = config.maxCharDefault!
-                while n < lengthOfQuoteSentence {
-                    let insertIndex = result.index(result.startIndex, offsetBy: i)
-                    result.insert(contentsOf: bitbarAPI, at: insertIndex)
-                    i += config.maxCharDefault! + lengthOfBitbarAPI
-                    n += config.maxCharDefault!
-                }
-                result.append(bitbarAPI)
-                return result
+            while n < lengthOfQuoteSentence {
+                let insertIndex = result.index(result.startIndex, offsetBy: i)
+                result.insert(contentsOf: bitbarAPI, at: insertIndex)
+                i += config.maxCharDefault! + lengthOfBitbarAPI
+                n += config.maxCharDefault!
             }
+            result.append(bitbarAPI)
+            return result
+        }
         func AddAPIForParallelQuote(quoteDefault: String, quoteAlternate: String) -> String {
             var result: String = ""
             var copyQuoteDefault = quoteDefault, copyQuoteAlternate = quoteAlternate
