@@ -1,9 +1,11 @@
 //
-//  main.swift
 //  RandomQuote
+//  main.swift
 //
 //  Created by Xin Liu on 12/7/20.
+//  Copyright @2020 Xin Liu, All rights reserved.
 //
+//TODO: add notification
 import Foundation
 
 let defaultMaxCharDefault = 60
@@ -95,7 +97,7 @@ struct quoteContent {
         let randomSerial = Int.random(in: 0..<amountOfList)
         return (quoteContentList[randomSerial], randomSerial)
     }
-    static func generateQuoteFromResourcesFile(file fileURL: URL) {
+    static func generateQuoteListFromResourcesFile(file fileURL: URL) {
         func getOnePartOfString(_ s: String) -> (serial: Int, label: Int, content: String, cutString: String, isEnd: Bool) {
             let startIndexOfOnePart = s.firstIndex(of: "#")
             let indexOfSerial = s.index(startIndexOfOnePart!, offsetBy: 1)
@@ -149,7 +151,7 @@ struct quoteContent {
     var defaultContent: String
     var alternateContent: String?
     var from: String?
-//FIXME: repeat character when change line.
+
     mutating func displayContent() {
         func AddAPIForSingleQuote(quote: String) -> String {
                 var result: String = quote
@@ -207,8 +209,9 @@ struct quoteContent {
             }
             for _ in 0..<max(linesQuoteDefault, linesQuoteAlternate) {
                 addToResult(i, j)
-                i += config.maxCharDefault!
-                j += config.maxCharAlternate!
+                //Avoid repeating to add the last character of last part.
+                i += config.maxCharDefault! + 1
+                j += config.maxCharAlternate! + 1
             }
             return result
         }
@@ -237,7 +240,7 @@ struct quoteContent {
     }
 }
 
-quoteContent.generateQuoteFromResourcesFile(file: locationResourcesFileURL!)
+quoteContent.generateQuoteListFromResourcesFile(file: locationResourcesFileURL!)
 
 print("📖")
 
