@@ -87,10 +87,10 @@ let bitbarAlternateAPI = "| color=\(config.quoteColor!) length=\(config.maxCharD
 
 struct quoteContent {
     static var quoteContentList: [quoteContent] = []
-    static func getRandomQuote() -> quoteContent {
+    static func getRandomQuote() -> (content: quoteContent,serial: Int) {
         let amountOfList = quoteContentList.count
         let randomSerial = Int.random(in: 0..<amountOfList)
-        return quoteContentList[randomSerial]
+        return (quoteContentList[randomSerial], randomSerial)
     }
     static func generateQuoteFromResourcesFile(file fileURL: URL) {
         func getOnePartOfString(_ s: String) -> (serial: Int, label: Int, content: String, cutString: String, isEnd: Bool) {
@@ -246,10 +246,15 @@ if config.pinQuote != nil {
         quoteContent.quoteContentList[i].displayContent()
     }
 }
-//TODO: NOT display already pinned quote
 print("---\n","Ramdom")
 var randomQuote = quoteContent.getRandomQuote()
-randomQuote.displayContent()
+if config.pinQuote != nil {
+    while config.pinQuote!.contains(randomQuote.serial) {
+        randomQuote = quoteContent.getRandomQuote()
+    }
+}
+randomQuote.content.displayContent()
 print("---\n","open resources| bash='open \(locationResourcesFile)' terminal=true")
 print("---\n","reload | refresh=true ")
+
 

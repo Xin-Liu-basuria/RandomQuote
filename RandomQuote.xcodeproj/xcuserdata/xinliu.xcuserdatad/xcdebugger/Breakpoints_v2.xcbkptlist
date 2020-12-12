@@ -32,8 +32,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "209"
             endingLineNumber = "209"
-            landmarkName = "displayContent()"
-            landmarkType = "7">
+            landmarkName = "AddAPIForParallelQuote(quoteDefault:quoteAlternate:)"
+            landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>
