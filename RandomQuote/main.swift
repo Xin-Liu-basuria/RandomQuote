@@ -53,104 +53,6 @@ let currentDate = Date()
 let calendar = Calendar.current
 let currentHours = calendar.component(.hour, from: currentDate)
 
-//set the config file path,please replace it with your file path!!!
-let locationResourcesFile = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt"
-let locationCongfig = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/config"
-
-//make sure the file path is right
-if URL(string: locationResourcesFile) == nil {
-    exit(1)
-}
-if URL(string: locationCongfig) == nil {
-    exit(1)
-}
-let locationResourcesFileURL = URL(string: locationResourcesFile)
-let locationCongfigURL = URL(string: locationCongfig)
-
-struct configFile {
-    var maxCharDefault: Int?
-    var maxCharAlternate: Int?
-    var quoteColor: String?
-    var fontSize: Int?
-    var fontKind: String?
-    var pinQuote: [Int]?
-    var backspaceNumberForwardFrom: Int?
-    var notificationHourList: [Int]?
-    init(file fileURL: URL) {
-        let wholeContentOfConfig = try! String(contentsOf: fileURL, encoding: .utf8)
-        let singleLineOfConfig = wholeContentOfConfig.split(separator: "\n")
-
-        let configFactorList = ["maxCharDefault",
-                                "maxCharAlternate",
-                                "quoteColor",
-                                "fontSize",
-                                "fontKind",
-                                "pinQuote",
-                                "backspaceNumberForwardFrom",
-                                "notificationHourList",]
-        func toInt(_ s: String) -> Int {
-            let indexStart = s.firstIndex(where: {$0.isNumber})
-            return Int(s[indexStart!...])!
-        }
-        for singleConfig in singleLineOfConfig {
-            for configFactor in configFactorList {
-                if singleConfig.contains(configFactor) {
-                    let ConfigFactorAndValue = singleConfig.split(separator: "=")
-                    switch configFactor {
-                        case configFactorList[0]:
-                            self.maxCharDefault = toInt(String(ConfigFactorAndValue[1]))
-                        case configFactorList[1]:
-                            self.maxCharAlternate = toInt(String(ConfigFactorAndValue[1]))
-                        case configFactorList[2]:
-                            self.quoteColor = String(ConfigFactorAndValue[1])
-                        case configFactorList[3]:
-                            self.fontSize = toInt(String(ConfigFactorAndValue[1]))
-                        case configFactorList[4]:
-                            self.fontKind = String(ConfigFactorAndValue[1])
-                        case configFactorList[5]:
-                            self.pinQuote = []
-                            let ToString = String(ConfigFactorAndValue[1])
-                            var temp = ToString.firstIndex(of: "[")
-                            let indexStart = ToString.index(temp!, offsetBy: 1)
-                            temp = ToString.firstIndex(of: "]")
-                            let indexEnd = ToString.index(temp!, offsetBy: -1)
-                            let pinSerialArray = ToString[indexStart...indexEnd].split(separator: ",")
-                            for i in 0..<pinSerialArray.count {
-                                self.pinQuote?.append(Int(String(pinSerialArray[i]))!)
-                            }
-                        case configFactorList[6]:
-                            self.backspaceNumberForwardFrom = toInt(String(ConfigFactorAndValue[1]))
-                            
-                        case configFactorList[7]:
-                            self.notificationHourList = []
-                            let ToString = String(ConfigFactorAndValue[1])
-                            var temp = ToString.firstIndex(of: "[")
-                            let indexStart = ToString.index(temp!, offsetBy: 1)
-                            temp = ToString.firstIndex(of: "]")
-                            let indexEnd = ToString.index(temp!, offsetBy: -1)
-                            let notificationHourListString = ToString[indexStart...indexEnd].split(separator: ",")
-                            for i in 0..<notificationHourListString.count {
-                                self.notificationHourList?.append(Int(String(notificationHourListString[i]))!)
-                            }
-                        default:
-                            print("Error")
-                    }
-                }
-            }
-        }
-    }
-}
-var config = configFile.init(file: locationCongfigURL!)
-//var config = configFile.init(maxCharDefault: defaultMaxCharDefault, maxCharAlternate: defaultMaxCharAlternate, quoteColor: defaultQuoteColor, fontSize: defautlFontSize)
-
-let bitbarAPI = "| color=\(config.quoteColor ?? defaultQuoteColor) length=\((config.maxCharDefault ?? defaultMaxCharDefault)+1) size=\(config.fontSize ?? defautlFontSize) font=\(config.fontKind ?? defaultFont)\n"
-let bitbarAlternateAPI = "| color=\(config.quoteColor ?? defaultQuoteColor) length=\((config.maxCharDefault ?? defaultMaxCharAlternate)+1) size=\(config.fontSize ?? defautlFontSize) font=\(config.fontKind ?? defaultFont) alternate=true\n"
-
-//Send notification at specific time use Apple script
-let task = Process()
-task.launchPath = "/usr/bin/osascript"
-task.arguments = ["-e display notification \"Bible Time.\" with title \"RandomQuote\" sound name \"Frog\""]
-
 var whetherNotification: Bool = false
 if config.notificationHourList != nil {
     for hour in config.notificationHourList! {
@@ -194,4 +96,5 @@ randomQuote.content.displayContent()
 
 print("---\n","open file| bash='open \(locationMarkdown)' terminal=true")
 print("---\n","reload | refresh=true ")
+
 
