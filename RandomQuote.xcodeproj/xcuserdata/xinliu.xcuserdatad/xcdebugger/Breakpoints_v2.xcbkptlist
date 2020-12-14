@@ -62,8 +62,8 @@
             filePath = "RandomQuote/QuoteContent.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "154"
-            endingLineNumber = "154"
+            startingLineNumber = "157"
+            endingLineNumber = "157"
             landmarkName = "generateQuoteListFromMarkDownFile(from:)"
             landmarkType = "7">
          </BreakpointContent>

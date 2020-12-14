@@ -127,20 +127,23 @@ struct QuoteContent: Codable {
             var temp: QuoteContent
             switch content.count {
                 case 2:
-                    temp = QuoteContent.init(defaultContent: String(content[1]))
+                    copyOfContent[1].removeAll(where: { $0 == "\n" })
+                    temp = QuoteContent.init(defaultContent: String(copyOfContent[1]))
                     QuoteContent.quoteContentList.append(temp)
                 case 3:
-                    copyOfContent[2].removeAll(where: { $0 == "_" })
+                    copyOfContent[1].removeAll(where: { $0 == "\n" })
+                    copyOfContent[2].removeAll(where: { $0 == "_" || $0 == "\n" })
                     if content[2].contains("__") {
-                        temp = QuoteContent.init(defaultContent: String(content[1]), from: String(copyOfContent[2]))
+                        temp = QuoteContent.init(defaultContent: String(copyOfContent[1]), from: String(copyOfContent[2]))
                     }else {
-                        temp = QuoteContent.init(defaultContent: String(content[1]), alternateContent: String(copyOfContent[2]))
+                        temp = QuoteContent.init(defaultContent: String(copyOfContent[1]), alternateContent: String(copyOfContent[2]))
                     }
                     QuoteContent.quoteContentList.append(temp)
                 case 4:
-                    copyOfContent[2].removeAll(where: { $0 == "_" })
-                    copyOfContent[3].removeAll(where: { $0 == "_" })
-                    temp = QuoteContent.init(defaultContent: String(content[1]), alternateContent: String(copyOfContent[2]), from: String(copyOfContent[3]))
+                    copyOfContent[1].removeAll(where: { $0 == "\n" })
+                    copyOfContent[2].removeAll(where: { $0 == "_" || $0 == "\n" })
+                    copyOfContent[3].removeAll(where: { $0 == "_" || $0 == "\n" })
+                    temp = QuoteContent.init(defaultContent: String(copyOfContent[1]), alternateContent: String(copyOfContent[2]), from: String(copyOfContent[3]))
                     QuoteContent.quoteContentList.append(temp)
                 default:
                     var _ = "doNothing"
