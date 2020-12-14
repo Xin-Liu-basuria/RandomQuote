@@ -40,6 +40,10 @@ if URL(string: locationMarkdown) == nil && URL(string: locationJson) == nil {
         QuoteContent.generateQuoteListFromJSON(from: URL(string: locationJson)!)
     }
 }
+if config.generateJson {
+    QuoteContent.generateJsonFile()
+}
+QuoteContent.generateJsonFile()
 
 //divider
 

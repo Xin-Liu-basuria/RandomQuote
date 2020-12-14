@@ -16,6 +16,7 @@ struct Config: Codable {
     var fontKind: String?
     var backspaceNumberForwardFrom: Int?
     var markdownIsPrior = true
+    var generateJson = false
     //those are optional and don't have an default config
     var pinQuote: [Int]?
     var notificationHourList: [Int]?
