@@ -39,9 +39,9 @@ struct QuoteContent: Codable {
             var i = config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!, j = config.lengthOfAlternateContent ?? configDefault.lengthOfAlternateContent!
             func addToResult(_ i: Int,_ j: Int) {
                 let indexDefault = copyQuoteDefault.index(copyQuoteDefault.startIndex, offsetBy: i)
-                let lastIndexDefault = copyQuoteDefault.index(indexDefault, offsetBy: -config.lengthOfDefaultContent!)
+                let lastIndexDefault = copyQuoteDefault.index(indexDefault, offsetBy: -(config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!))
                 let indexAlternate = copyQuoteAlternate.index(copyQuoteAlternate.startIndex, offsetBy: j)
-                let lastIndexAlternate = copyQuoteAlternate.index(indexAlternate, offsetBy: -config.lengthOfAlternateContent!)
+                let lastIndexAlternate = copyQuoteAlternate.index(indexAlternate, offsetBy: -(config.lengthOfAlternateContent ?? configDefault.lengthOfAlternateContent!))
                 let tempDefault = copyQuoteDefault[lastIndexDefault...indexDefault]
                 let tempAlternate = copyQuoteAlternate[lastIndexAlternate...indexAlternate]
                 result.append(contentsOf: tempDefault)
@@ -56,7 +56,7 @@ struct QuoteContent: Codable {
                     copyQuoteAlternate.append(" ")
                 }
                 //add a line for avoiding out of bounds when cutting string
-                for _ in 0...(config.lengthOfDefaultContent! + max(linesQuoteDefault, linesQuoteAlternate) ) {
+                for _ in 0...(config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent! + max(linesQuoteDefault, linesQuoteAlternate) ) {
                     copyQuoteDefault.append(" ")
                 }
             }else if linesQuoteDefault < linesQuoteAlternate {
@@ -79,8 +79,8 @@ struct QuoteContent: Codable {
             for _ in 0..<max(linesQuoteDefault, linesQuoteAlternate) {
                 addToResult(i, j)
                 //Avoid repeating to add the last character of last part.
-                i += config.lengthOfDefaultContent! + 1
-                j += config.lengthOfAlternateContent! + 1
+                i += config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent! + 1
+                j += config.lengthOfAlternateContent ?? configDefault.lengthOfAlternateContent! + 1
             }
             return result
         }
@@ -91,7 +91,7 @@ struct QuoteContent: Codable {
             print(AddAPIForSingleQuote(content: defaultContent), terminator:"")
         }
         if from != nil {
-            for _ in 0..<(config.backspaceNumberForwardFrom ?? (config.lengthOfDefaultContent! - from!.count)) {
+            for _ in 0..<(config.backspaceNumberForwardFrom ?? (config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent! - from!.count)) {
                 print(" ", terminator:"")
             }
             print("--",from!,"| trim=false")
