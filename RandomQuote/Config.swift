@@ -43,6 +43,5 @@ struct Config: Codable {
     }
 }
 
-//bitbarapi struct
 let bitbarAPI = "| color=\(config.fontColor ?? configDefault.fontColor!) length=\((config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!)+1) size=\(config.fontSize ?? configDefault.fontSize!) font=\(config.fontKind ?? configDefault.fontKind!)\n"
 let bitbarAlternateAPI = "| color=\(config.fontColor ?? configDefault.fontColor!) length=\((config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!)+1) size=\(config.fontSize ?? configDefault.fontSize!) font=\(config.fontKind ?? configDefault.fontKind!) alternate=true\n"
