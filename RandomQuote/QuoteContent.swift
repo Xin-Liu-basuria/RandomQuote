@@ -170,4 +170,17 @@ struct QuoteContent: Codable {
             print(error.localizedDescription)
         }
     }
+    static func generateJsonFile() {
+        let encoder = JSONEncoder()
+        let jsonData = try! encoder.encode(QuoteContent.quoteContentList)
+        let jsonString = String(data: jsonData, encoding: .utf8)
+        let homePath = FileManager().homeDirectoryForCurrentUser
+        let generateJsonPath = homePath.appendingPathComponent("Downloads/resources.json")
+        do {
+            try jsonString?.write(to: generateJsonPath, atomically: true, encoding: .utf8)
+        } catch {
+            print("Errors:failed to write json file")
+        }
+    }
 }
+
