@@ -7,133 +7,157 @@
 //
 import Foundation
 
-//set default config value in order to avoid the crash due to lacking of parameter
-let defaultMaxCharDefault = 60
-let defaultMaxCharAlternate = 30
-let defaultQuoteColor = "#C46243"
-let defautlFontSize = 13
-let defaultFont = "Courier"
-
-//get the current time to judge if send notification
-//PS:To make the function working normally,please run the script once per hour
-let currentDate = Date()
-let calendar = Calendar.current
-let currentHours = calendar.component(.hour, from: currentDate)
-
 //set the config file path,please replace it with your file path!!!
 let locationResourcesFile = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.txt"
-let locationCongfig = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/config"
-
+let locationCongfig = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/config.json"
 //make sure the file path is right
 if URL(string: locationResourcesFile) == nil {
+    print("File path is ircorrect")
     exit(1)
 }
 if URL(string: locationCongfig) == nil {
+    print("File path is ircorrect")
     exit(1)
 }
 let locationResourcesFileURL = URL(string: locationResourcesFile)
 let locationCongfigURL = URL(string: locationCongfig)
 
-struct configFile {
-    var maxCharDefault: Int?
-    var maxCharAlternate: Int?
-    var quoteColor: String?
+struct Config: Codable {
+    //those are must and have an default config inside code even you don't set
+    var lengthOfDefaultContent: Int?
+    var lengthOfAlternateContent: Int?
+    var fontColor: String?
     var fontSize: Int?
     var fontKind: String?
-    var pinQuote: [Int]?
     var backspaceNumberForwardFrom: Int?
+    //those are optional and don't have an default config
+    var pinQuote: [Int]?
     var notificationHourList: [Int]?
-    init(file fileURL: URL) {
-        let wholeContentOfConfig = try! String(contentsOf: fileURL, encoding: .utf8)
-        let singleLineOfConfig = wholeContentOfConfig.split(separator: "\n")
+    var notificationContent: String?
+    
+    //for custom config
+    init(from jsonURL: URL) {
+        let jsonString = try! String(contentsOf: jsonURL, encoding: .utf8)
+        let jsonData = Data(jsonString.utf8)
+        let decoder = JSONDecoder()
+        self = try! decoder.decode(Config.self, from: jsonData)
+    }
+    //for default config
+    init(lengthOfDefaultContent: Int, lengthOfAlternateContent: Int, fontColor: String, fontSize: Int, fontKind: String, backspaceNumberForwardFrom: Int) {
+        self.lengthOfDefaultContent = lengthOfDefaultContent
+        self.lengthOfAlternateContent = lengthOfAlternateContent
+        self.fontColor = fontColor
+        self.fontSize = fontSize
+        self.fontKind = fontKind
+        self.backspaceNumberForwardFrom = backspaceNumberForwardFrom
+    }
+}
+var config = Config.init(from: locationCongfigURL!)
+var configDefault = Config.init(lengthOfDefaultContent: 60, lengthOfAlternateContent: 60, fontColor: "#C46243", fontSize: 13, fontKind: "Courier", backspaceNumberForwardFrom: 60)
 
-        let configFactorList = ["maxCharDefault",
-                                "maxCharAlternate",
-                                "quoteColor",
-                                "fontSize",
-                                "fontKind",
-                                "pinQuote",
-                                "backspaceNumberForwardFrom",
-                                "notificationHourList",]
-        func toInt(_ s: String) -> Int {
-            let indexStart = s.firstIndex(where: {$0.isNumber})
-            return Int(s[indexStart!...])!
+let bitbarAPI = "| color=\(config.fontColor ?? configDefault.fontColor!) length=\((config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!)+1) size=\(config.fontSize ?? configDefault.fontSize!) font=\(config.fontKind ?? configDefault.fontKind!)\n"
+let bitbarAlternateAPI = "| color=\(config.fontColor ?? configDefault.fontColor!) length=\((config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!)+1) size=\(config.fontSize ?? configDefault.fontSize!) font=\(config.fontKind ?? configDefault.fontKind!) alternate=true\n"
+
+struct QuoteContent {
+    var defaultContent: String
+    var alternateContent: String?
+    var from: String?
+    
+    mutating func displayContent() {
+        func AddAPIForSingleQuote(quote: String) -> String {
+            var result: String = quote
+            let lengthOfBitbarAPI = bitbarAPI.count
+            let lengthOfQuoteSentence = quote.count
+            var i = config.lengthOfDefaultContent!, n = config.lengthOfDefaultContent!
+            while n < lengthOfQuoteSentence {
+                let insertIndex = result.index(result.startIndex, offsetBy: i)
+                result.insert(contentsOf: bitbarAPI, at: insertIndex)
+                i += config.lengthOfDefaultContent! + lengthOfBitbarAPI
+                n += config.lengthOfDefaultContent!
+            }
+            result.append(bitbarAPI)
+            return result
         }
-        for singleConfig in singleLineOfConfig {
-            for configFactor in configFactorList {
-                if singleConfig.contains(configFactor) {
-                    let ConfigFactorAndValue = singleConfig.split(separator: "=")
-                    switch configFactor {
-                        case configFactorList[0]:
-                            self.maxCharDefault = toInt(String(ConfigFactorAndValue[1]))
-                        case configFactorList[1]:
-                            self.maxCharAlternate = toInt(String(ConfigFactorAndValue[1]))
-                        case configFactorList[2]:
-                            self.quoteColor = String(ConfigFactorAndValue[1])
-                        case configFactorList[3]:
-                            self.fontSize = toInt(String(ConfigFactorAndValue[1]))
-                        case configFactorList[4]:
-                            self.fontKind = String(ConfigFactorAndValue[1])
-                        case configFactorList[5]:
-                            self.pinQuote = []
-                            let ToString = String(ConfigFactorAndValue[1])
-                            var temp = ToString.firstIndex(of: "[")
-                            let indexStart = ToString.index(temp!, offsetBy: 1)
-                            temp = ToString.firstIndex(of: "]")
-                            let indexEnd = ToString.index(temp!, offsetBy: -1)
-                            let pinSerialArray = ToString[indexStart...indexEnd].split(separator: ",")
-                            for i in 0..<pinSerialArray.count {
-                                self.pinQuote?.append(Int(String(pinSerialArray[i]))!)
-                            }
-                        case configFactorList[6]:
-                            self.backspaceNumberForwardFrom = toInt(String(ConfigFactorAndValue[1]))
-                            
-                        case configFactorList[7]:
-                            self.notificationHourList = []
-                            let ToString = String(ConfigFactorAndValue[1])
-                            var temp = ToString.firstIndex(of: "[")
-                            let indexStart = ToString.index(temp!, offsetBy: 1)
-                            temp = ToString.firstIndex(of: "]")
-                            let indexEnd = ToString.index(temp!, offsetBy: -1)
-                            let notificationHourListString = ToString[indexStart...indexEnd].split(separator: ",")
-                            for i in 0..<notificationHourListString.count {
-                                self.notificationHourList?.append(Int(String(notificationHourListString[i]))!)
-                            }
-                        default:
-                            print("Error")
-                    }
+        func AddAPIForParallelQuote(quoteDefault: String, quoteAlternate: String) -> String {
+            var result: String = ""
+            var copyQuoteDefault = quoteDefault, copyQuoteAlternate = quoteAlternate
+            let lengthQuoteDefault = quoteDefault.count
+            let lengthQuoteAlternate = quoteAlternate.count
+            let linesQuoteDefault = Int( (Double(lengthQuoteDefault) / Double(config.lengthOfDefaultContent!)) + 1.0 )
+            let linesQuoteAlternate = Int( (Double(lengthQuoteAlternate) / Double(config.lengthOfAlternateContent!)) + 1.0 )
+            var i = config.lengthOfDefaultContent!, j = config.lengthOfAlternateContent!
+            func addToResult(_ i: Int,_ j: Int) {
+                let indexDefault = copyQuoteDefault.index(copyQuoteDefault.startIndex, offsetBy: i)
+                let lastIndexDefault = copyQuoteDefault.index(indexDefault, offsetBy: -config.lengthOfDefaultContent!)
+                let indexAlternate = copyQuoteAlternate.index(copyQuoteAlternate.startIndex, offsetBy: j)
+                let lastIndexAlternate = copyQuoteAlternate.index(indexAlternate, offsetBy: -config.lengthOfAlternateContent!)
+                let tempDefault = copyQuoteDefault[lastIndexDefault...indexDefault]
+                let tempAlternate = copyQuoteAlternate[lastIndexAlternate...indexAlternate]
+                result.append(contentsOf: tempDefault)
+                result.append(bitbarAPI)
+                result.append(contentsOf: tempAlternate)
+                result.append(bitbarAlternateAPI)
+            }
+            //add backspace to make two quotes same as the number of lines
+            if linesQuoteDefault > linesQuoteAlternate {
+                let backspaceNumber = (linesQuoteDefault - linesQuoteAlternate + 1) * (config.lengthOfAlternateContent! + 1)
+                for _ in 0..<backspaceNumber {
+                    copyQuoteAlternate.append(" ")
+                }
+                //add a line for avoiding out of bounds when cutting string
+                for _ in 0...(config.lengthOfDefaultContent! + max(linesQuoteDefault, linesQuoteAlternate) ) {
+                    copyQuoteDefault.append(" ")
+                }
+            }else if linesQuoteDefault < linesQuoteAlternate {
+                let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault + 1) * (config.lengthOfDefaultContent! + 1)
+                for _ in 0..<backspaceNumber {
+                    copyQuoteDefault.append(" ")
+                }
+                //add a line for avoiding out of bounds when cutting string
+                for _ in 0...(config.lengthOfAlternateContent! + max(linesQuoteDefault, linesQuoteAlternate) ) {
+                    copyQuoteAlternate.append(" ")
+                }
+            }else {
+                for _ in 0...(config.lengthOfDefaultContent! + max(linesQuoteDefault, linesQuoteAlternate) ) {
+                    copyQuoteDefault.append(" ")
+                }
+                for _ in 0...(config.lengthOfAlternateContent! + max(linesQuoteDefault, linesQuoteAlternate) ) {
+                    copyQuoteAlternate.append(" ")
                 }
             }
+            for _ in 0..<max(linesQuoteDefault, linesQuoteAlternate) {
+                addToResult(i, j)
+                //Avoid repeating to add the last character of last part.
+                i += config.lengthOfDefaultContent! + 1
+                j += config.lengthOfAlternateContent! + 1
+            }
+            return result
         }
-    }
-}
-var config = configFile.init(file: locationCongfigURL!)
-//var config = configFile.init(maxCharDefault: defaultMaxCharDefault, maxCharAlternate: defaultMaxCharAlternate, quoteColor: defaultQuoteColor, fontSize: defautlFontSize)
-
-let bitbarAPI = "| color=\(config.quoteColor!) length=\((config.maxCharDefault ?? defaultMaxCharDefault)+1) size=\(config.fontSize!) font=\(config.fontKind ?? defaultFont)\n"
-let bitbarAlternateAPI = "| color=\(config.quoteColor!) length=\((config.maxCharDefault ?? defaultMaxCharAlternate)+1) size=\(config.fontSize!) font=\(config.fontKind ?? defaultFont) alternate=true\n"
-
-//Send notification at specific time use Apple script
-let task = Process()
-task.launchPath = "/usr/bin/osascript"
-task.arguments = ["-e display notification \"Bible Time.\" with title \"RandomQuote\" sound name \"Frog\""]
-
-var whetherNotification: Bool = false
-if config.notificationHourList != nil {
-    for hour in config.notificationHourList! {
-        if currentHours == hour {
-            whetherNotification = true
+        print("---")
+        if alternateContent != nil {
+            print(AddAPIForParallelQuote(quoteDefault: defaultContent, quoteAlternate: alternateContent!), terminator:"")
+        }else {
+            print(AddAPIForSingleQuote(quote: defaultContent), terminator:"")
         }
+        for _ in 0..<(config.backspaceNumberForwardFrom ?? (config.lengthOfDefaultContent! - from!.count)) {
+            print(" ", terminator:"")
+        }
+        print("--",from!,"| trim=false")
     }
-}
-if whetherNotification {
-    task.launch()
-}
-
-
-struct quoteContent {
-    static var quoteContentList: [quoteContent] = []
-    static func getRandomQuote() -> (content: quoteContent,serial: Int) {
+    init(defaultContent: String) {
+        self.defaultContent = defaultContent
+    }
+    init(defaultContent: String,from: String) {
+        self.defaultContent = defaultContent
+        self.from = from
+    }
+    init(defaultContent: String, alternateContent: String, from: String) {
+        self.defaultContent = defaultContent
+        self.alternateContent = alternateContent
+        self.from = from
+    }
+    static var quoteContentList: [QuoteContent] = []
+    static func getRandomQuote() -> (content: QuoteContent,serial: Int) {
         let amountOfList = quoteContentList.count
         let randomSerial = Int.random(in: 0..<amountOfList)
         return (quoteContentList[randomSerial], randomSerial)
@@ -167,7 +191,7 @@ struct quoteContent {
         func writeDataToInstance(serial: Int, label: Int, content: String) {
             switch label {
             case 0:
-                quoteContentList.append(quoteContent.init(defaultContent: content))
+                quoteContentList.append(QuoteContent.init(defaultContent: content))
             case 1:
                 quoteContentList[serial].alternateContent = content
             case 2:
@@ -188,124 +212,53 @@ struct quoteContent {
             print("Error:Failed to read resources.txt")
         }
     }
-    
-    var defaultContent: String
-    var alternateContent: String?
-    var from: String?
-    
-    mutating func displayContent() {
-        func AddAPIForSingleQuote(quote: String) -> String {
-            var result: String = quote
-            let lengthOfBitbarAPI = bitbarAPI.count
-            let lengthOfQuoteSentence = quote.count
-            var i = config.maxCharDefault!, n = config.maxCharDefault!
-            while n < lengthOfQuoteSentence {
-                let insertIndex = result.index(result.startIndex, offsetBy: i)
-                result.insert(contentsOf: bitbarAPI, at: insertIndex)
-                i += config.maxCharDefault! + lengthOfBitbarAPI
-                n += config.maxCharDefault!
-            }
-            result.append(bitbarAPI)
-            return result
-        }
-        func AddAPIForParallelQuote(quoteDefault: String, quoteAlternate: String) -> String {
-            var result: String = ""
-            var copyQuoteDefault = quoteDefault, copyQuoteAlternate = quoteAlternate
-            let lengthQuoteDefault = quoteDefault.count
-            let lengthQuoteAlternate = quoteAlternate.count
-            let linesQuoteDefault = Int( (Double(lengthQuoteDefault) / Double(config.maxCharDefault!)) + 1.0 )
-            let linesQuoteAlternate = Int( (Double(lengthQuoteAlternate) / Double(config.maxCharAlternate!)) + 1.0 )
-            var i = config.maxCharDefault!, j = config.maxCharAlternate!
-            func addToResult(_ i: Int,_ j: Int) {
-                let indexDefault = copyQuoteDefault.index(copyQuoteDefault.startIndex, offsetBy: i)
-                let lastIndexDefault = copyQuoteDefault.index(indexDefault, offsetBy: -config.maxCharDefault!)
-                let indexAlternate = copyQuoteAlternate.index(copyQuoteAlternate.startIndex, offsetBy: j)
-                let lastIndexAlternate = copyQuoteAlternate.index(indexAlternate, offsetBy: -config.maxCharAlternate!)
-                let tempDefault = copyQuoteDefault[lastIndexDefault...indexDefault]
-                let tempAlternate = copyQuoteAlternate[lastIndexAlternate...indexAlternate]
-                result.append(contentsOf: tempDefault)
-                result.append(bitbarAPI)
-                result.append(contentsOf: tempAlternate)
-                result.append(bitbarAlternateAPI)
-            }
-            //add backspace to make two quotes same as the number of lines
-            if linesQuoteDefault > linesQuoteAlternate {
-                let backspaceNumber = (linesQuoteDefault - linesQuoteAlternate + 1) * (config.maxCharAlternate! + 1)
-                for _ in 0..<backspaceNumber {
-                    copyQuoteAlternate.append(" ")
-                }
-                //add a line for avoiding out of bounds when cutting string
-                for _ in 0...(config.maxCharDefault! + max(linesQuoteDefault, linesQuoteAlternate) ) {
-                    copyQuoteDefault.append(" ")
-                }
-            }else if linesQuoteDefault < linesQuoteAlternate {
-                let backspaceNumber = (linesQuoteAlternate - linesQuoteDefault + 1) * (config.maxCharDefault! + 1)
-                for _ in 0..<backspaceNumber {
-                    copyQuoteDefault.append(" ")
-                }
-                //add a line for avoiding out of bounds when cutting string
-                for _ in 0...(config.maxCharAlternate! + max(linesQuoteDefault, linesQuoteAlternate) ) {
-                    copyQuoteAlternate.append(" ")
-                }
-            }else {
-                for _ in 0...(config.maxCharDefault! + max(linesQuoteDefault, linesQuoteAlternate) ) {
-                    copyQuoteDefault.append(" ")
-                }
-                for _ in 0...(config.maxCharAlternate! + max(linesQuoteDefault, linesQuoteAlternate) ) {
-                    copyQuoteAlternate.append(" ")
-                }
-            }
-            for _ in 0..<max(linesQuoteDefault, linesQuoteAlternate) {
-                addToResult(i, j)
-                //Avoid repeating to add the last character of last part.
-                i += config.maxCharDefault! + 1
-                j += config.maxCharAlternate! + 1
-            }
-            return result
-        }
-        print("---")
-        if alternateContent != nil {
-            print(AddAPIForParallelQuote(quoteDefault: defaultContent, quoteAlternate: alternateContent!), terminator:"")
-        }else {
-            print(AddAPIForSingleQuote(quote: defaultContent), terminator:"")
-        }
-        for _ in 0..<(config.backspaceNumberForwardFrom ?? (config.maxCharDefault! - from!.count)) {
-            print(" ", terminator:"")
-        }
-        print("--",from!,"| trim=false")
-    }
-    init(defaultContent: String) {
-        self.defaultContent = defaultContent
-    }
-    init(defaultContent: String,from: String) {
-        self.defaultContent = defaultContent
-        self.from = from
-    }
-    init(defaultContent: String, alternateContent: String, from: String) {
-        self.defaultContent = defaultContent
-        self.alternateContent = alternateContent
-        self.from = from
+    static func generateQuoteListFromJSON(from jsonURL: URL) {
+        
     }
 }
 
+
+
 //Initialize the quote list
-quoteContent.generateQuoteListFromResourcesFile(file: locationResourcesFileURL!)
+QuoteContent.generateQuoteListFromResourcesFile(file: locationResourcesFileURL!)
+
+//Send notification at specific time use Apple script
+let osascript = Process()
+osascript.launchPath = "/usr/bin/osascript"
+osascript.arguments = ["-e display notification \"\(config.notificationContent ?? "")\" with title \"RandomQuote\" sound name \"Frog\""]
+//get the current time to judge if send notification
+//PS:To make the function working normally,please run the script once per hour
+let currentDate = Date()
+let calendar = Calendar.current
+let currentHours = calendar.component(.hour, from: currentDate)
+
+var whetherNotification: Bool = false
+if config.notificationHourList != nil {
+    for hour in config.notificationHourList! {
+        if currentHours == hour {
+            whetherNotification = true
+        }
+    }
+}
+if whetherNotification {
+    osascript.launch()
+}
 
 print("📖")
 
 if config.pinQuote != nil {
     print("---\n","Pinned")
     for i in config.pinQuote! {
-        quoteContent.quoteContentList[i].displayContent()
+        QuoteContent.quoteContentList[i].displayContent()
     }
 }
 
 //get the random quote which doesn't display
-var randomQuote = quoteContent.getRandomQuote()
+var randomQuote = QuoteContent.getRandomQuote()
 if config.pinQuote != nil {
     var tryTimes = 0
     while config.pinQuote!.contains(randomQuote.serial) {
-        randomQuote = quoteContent.getRandomQuote()
+        randomQuote = QuoteContent.getRandomQuote()
         //Avoid being dead circle
         tryTimes += 1
         if tryTimes > 10 {
