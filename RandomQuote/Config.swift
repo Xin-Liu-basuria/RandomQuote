@@ -15,6 +15,7 @@ struct Config: Codable {
     var fontSize: Int?
     var fontKind: String?
     var backspaceNumberForwardFrom: Int?
+    var markdownIsPrior = true
     //those are optional and don't have an default config
     var pinQuote: [Int]?
     var notificationHourList: [Int]?
@@ -41,3 +42,6 @@ struct Config: Codable {
         self.backspaceNumberForwardFrom = backspaceNumberForwardFrom
     }
 }
+
+let bitbarAPI = "| color=\(config.fontColor ?? configDefault.fontColor!) length=\((config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!)+1) size=\(config.fontSize ?? configDefault.fontSize!) font=\(config.fontKind ?? configDefault.fontKind!)\n"
+let bitbarAlternateAPI = "| color=\(config.fontColor ?? configDefault.fontColor!) length=\((config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!)+1) size=\(config.fontSize ?? configDefault.fontSize!) font=\(config.fontKind ?? configDefault.fontKind!) alternate=true\n"

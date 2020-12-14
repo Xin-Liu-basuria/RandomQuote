@@ -9,7 +9,6 @@ import Foundation
 
 
 //set the config file path,please replace it with your file path!!!
-let markdownIsPrior = true
 let locationMarkdown = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.md"
 let locationJson = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/resources.json"
 let locationCongfig = "file:///Users/xinliu/Dropbox/Bitbar-Plugins/quoteResources/config.json"
@@ -24,10 +23,6 @@ if URL(string: locationCongfig) == nil {
 var config = Config.init(from: URL(string: locationCongfig)!)
 var configDefault = Config.init(lengthOfDefaultContent: 60, lengthOfAlternateContent: 60, fontColor: "#C46243", fontSize: 13, fontKind: "Courier", backspaceNumberForwardFrom: 60)
 
-//bitbarapi struct
-let bitbarAPI = "| color=\(config.fontColor ?? configDefault.fontColor!) length=\((config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!)+1) size=\(config.fontSize ?? configDefault.fontSize!) font=\(config.fontKind ?? configDefault.fontKind!)\n"
-let bitbarAlternateAPI = "| color=\(config.fontColor ?? configDefault.fontColor!) length=\((config.lengthOfDefaultContent ?? configDefault.lengthOfDefaultContent!)+1) size=\(config.fontSize ?? configDefault.fontSize!) font=\(config.fontKind ?? configDefault.fontKind!) alternate=true\n"
-
 //divider
 
 //Initialize the quote list
@@ -39,7 +34,7 @@ if URL(string: locationMarkdown) == nil && URL(string: locationJson) == nil {
 }else if URL(string: locationMarkdown) == nil && URL(string: locationJson) != nil{
     QuoteContent.generateQuoteListFromJSON(from: URL(string: locationJson)!)
 }else {
-    if markdownIsPrior {
+    if config.markdownIsPrior {
         QuoteContent.generateQuoteListFromMarkDownFile(from: URL(string: locationMarkdown)!)
     }else {
         QuoteContent.generateQuoteListFromJSON(from: URL(string: locationJson)!)
@@ -174,7 +169,8 @@ print("📖")
 
 if config.pinQuote != nil {
     print("---\n","Pinned")
-    for i in config.pinQuote! {
+    let pinQuote = config.pinQuote?.map{ $0 - 1 }
+    for i in pinQuote! {
         QuoteContent.quoteContentList[i].displayContent()
     }
 }
