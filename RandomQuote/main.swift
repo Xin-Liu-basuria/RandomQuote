@@ -43,7 +43,6 @@ if URL(string: locationMarkdown) == nil && URL(string: locationJson) == nil {
 if config.generateJson {
     QuoteContent.generateJsonFile()
 }
-QuoteContent.generateJsonFile()
 
 //divider
 
