@@ -72,7 +72,7 @@ if you don't know what is bitbar,please click [here](https://github.com/matryer/
         15,
         21
     ],
-    "notificationContent": "Bible Time!"
+    "notificationContent": "XXXXX"
 }
 ```
 
@@ -138,4 +138,4 @@ If you like my product,don't forget to star!😘
 
 ## License
 
-RandomQuote is available under the MIT license. See the LICENSE file for more info.
+YourQuote is available under the MIT license. See the LICENSE file for more info.
